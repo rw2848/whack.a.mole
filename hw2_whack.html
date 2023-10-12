@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Whack-A-Mole Game</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const $scoreDisplay = $('.score'), $timerDisplay = $('.timer'), $resetButton = $('.reset-btn'),
+                $holes = $('.hole'), numHoles = $holes.length, time = 20, base_lag = 500, var_lag = 2500;
+            let timer = time;
+            let score = 0;
+            let gameInterval;
+            let isActive = false;
+
+            function isMole(target) {
+                return (target.css('background-image').includes('hw2_mole.png'));
+            }
+            function mole(target) {
+                target.css('background-image', "url('hw2_mole.png')");
+            }
+            function hole(target) {
+                target.css('background-image', "url('hw2_hole.png')");
+            }
+
+            function showMole() {
+                let $randomHole = $($holes[Math.floor(Math.random() * numHoles)]);
+                while (isMole($randomHole)) {
+                    $randomHole = $($holes[Math.floor(Math.random() * numHoles)]);
+                }
+                mole($randomHole);
+                let lag = base_lag + Math.random() * var_lag;
+                setTimeout( () => {
+                    if (!isActive) return;
+                    if (isMole($randomHole)) {
+                        hole($randomHole);
+                        console.log('Mole disappeared, delay: ' + lag);
+                    }
+                }, lag);
+            }
+
+            function hit(event) {
+                let target = $(event.currentTarget);
+                if (isMole(target)) {
+                    score ++;
+                    $scoreDisplay.text(score);
+                    hole(target);
+                    console.log('Mole killed');
+                }
+            }
+
+            function startGame() {
+                console.log('Game Started')
+                isActive = true;
+                $holes.on('click',hit);
+                gameInterval = setInterval( () => {
+                    timer --;
+                    $timerDisplay.text(timer);
+                    if (timer === 0) {
+                        isActive = false;
+                        clearInterval(gameInterval);
+                        $holes.off('click');
+                        console.log('Game Over');
+                        $('.message').show();
+                    }
+                }, 1000);
+
+                (function loop(){
+                    let rand = base_lag + Math.random() * var_lag;
+                    setTimeout( () => {
+                        if (!isActive) return;
+                        console.log('Mole appeared, delay: ' + rand)
+                        showMole();
+                        loop();
+                    }, rand);
+                }());
+            }
+
+            function resetGame() {
+                $('.message').hide();
+                isActive = false;
+                timer = time;
+                score = 0;
+                clearInterval(gameInterval);
+                $holes.css("background-image", "url('hw2_hole.png')");
+                console.log('Field Cleared');
+                $timerDisplay.text(timer);
+                $scoreDisplay.text(score);
+                startGame();
+            }
+            $resetButton.on('click', resetGame);
+        });
+
+    </script>
+
+    <style>
+        *:not(input) {
+            cursor: default;
+        }
+        body, html {
+            margin: 0;
+            height: 100%;
+        }
+        body {
+            font-family: 'Futura', sans-serif;
+            background-color: #fff5d7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: static;
+        }
+        .game-container {
+            padding-block: 50px;
+            padding-inline: 180px;
+            background-color: #01893f;
+            border-radius: 12px;
+            border: 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+        .hole {
+            width: 60px;
+            height: 50px;
+            background-image: url('hw2_hole.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .reset-btn {
+            padding: 8px 24px;
+            border-radius: 12px;
+            border: 1px solid yellow;
+            background-color: #01893f;
+            color: yellow;
+            cursor: pointer;
+            margin: 20px 0 0 50px;
+            font-family: 'Futura', sans-serif;
+        }
+        .digit_info {
+            font-size: 20px;
+            color: yellow;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .timer {
+            font-size: 32px;
+            color: white;
+            display: flex;
+            margin-top: 6px;
+            margin-left: 6px;
+            justify-content: flex-start;
+        }
+        .score {
+            font-size: 32px;
+            color: white;
+            display: flex;
+            margin-top: 6px;
+            margin-right: 6px;
+            justify-content: flex-end;
+        }
+        .message {
+            display: none;
+            font-size: 36px;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            position: fixed;
+            top:50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 1000;
+        }
+    </style>
+
+</head>
+<body>
+<div class="game-container">
+    <div class="game-info">
+        <div>
+            <div class="digit_info">Timer:</div>
+            <div class="timer">0</div>
+        </div>
+        <div>
+            <div class="digit_info">Score:</div>
+            <div class="score">0</div>
+        </div>
+    </div>
+    <div class="grid">
+        <div class="hole"> </div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+    </div>
+    <button class="reset-btn">Reset Game</button>
+    <div class="message">Game Over</div>
+</div>
+</body>
+</html>
